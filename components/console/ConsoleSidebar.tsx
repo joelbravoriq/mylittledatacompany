@@ -6,14 +6,24 @@ import { usePathname } from "next/navigation";
 const links = [
   {
     href: "/console",
-    label: "Observabilidad & Pipelines",
+    label: "General Health",
     icon: (
       <path d="M3 3v18h18M7 15l4-6 3 4 5-8" />
     ),
   },
   {
+    href: "/console/clients",
+    label: "Clientes & Tenancy",
+    icon: (
+      <>
+        <path d="M3 21V8l9-5 9 5v13" />
+        <path d="M9 21v-7h6v7M9 12h.01M15 12h.01M9 8h.01M15 8h.01" />
+      </>
+    ),
+  },
+  {
     href: "/console/sources",
-    label: "Data Sources",
+    label: "Data Sources & Pipelines",
     icon: (
       <path d="M4 6c0-1.1 3.6-2 8-2s8 .9 8 2-3.6 2-8 2-8-.9-8-2Zm0 0v12c0 1.1 3.6 2 8 2s8-.9 8-2V6M4 12c0 1.1 3.6 2 8 2s8-.9 8-2" />
     ),
@@ -30,14 +40,14 @@ const links = [
   },
   {
     href: "/console/compliance",
-    label: "Compliance Logs",
+    label: "Compliance & Ley 21.719",
     icon: (
       <path d="M12 2 4 6v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6l-8-4Z" />
     ),
   },
   {
     href: "/console/settings",
-    label: "Configuración & API Keys",
+    label: "API Keys & Billing",
     icon: (
       <>
         <circle cx="12" cy="12" r="3" />

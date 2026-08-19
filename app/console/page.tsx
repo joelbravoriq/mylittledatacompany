@@ -6,8 +6,8 @@ export default function ObservabilityPage() {
   return (
     <>
       <ConsoleHeader
-        eyebrow="Observabilidad & Pipelines"
-        title="Health Check de Data Pipelines"
+        eyebrow="General Health"
+        title="Overview Global de Data Pipelines"
         desc="Estado en vivo de la ingesta, calidad y frescura de todos los feeds del catálogo DaaS."
       />
 
