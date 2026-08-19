@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-base-950 text-base-100 antialiased;
+  }
+  ::selection {
+    @apply bg-amber/30 text-amber-bright;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-policy;
+  }
+}
+
+@layer utilities {
+  .bg-dot-grid {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-bright via-amber to-amber-dim;
+  }
+  .card-border {
+    @apply border border-base-700/80;
+  }
+  .glow {
+    box-shadow: 0 0 0 1px rgba(232, 163, 61, 0.18), 0 0 40px -14px rgba(232, 163, 61, 0.35);
+  }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #3a404d;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
