@@ -37,10 +37,22 @@ from supabase import Client, create_client
 # Config
 # ---------------------------------------------------------------------------
 
+# Obtenidas via la API de CKAN del portal (package_show?id=registro-de-empresas-y-sociedades),
+# no adivinadas: cada recurso tiene un UUID propio por año que no sigue un patrón predecible.
 DATASET_URLS = {
-    2024: "https://datos.gob.cl/dataset/registro-de-empresas-y-sociedades/resource/42ee8c8c-59cf-42e4-89af-ec19a87dbf8d/download/2024-sociedades-por-fecha-rut-constitucion.csv",
-    # Agregar aquí los recursos de otros años publicados en la misma dataset page
-    # (https://datos.gob.cl/dataset/registro-de-empresas-y-sociedades) según se necesiten.
+    2013: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/fd2b91b0-eb8e-45f1-98d0-1f3316bb6468/download/2013-sociedades-por-fecha-rut-constitucion.csv",
+    2014: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/ba5d9b2a-c292-45f5-9767-93420c62529e/download/2014-sociedades-por-fecha-rut-constitucion.csv",
+    2015: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/6ffd416f-376f-40a8-9537-0d739f29fac9/download/2015-sociedades-por-fecha-rut-constitucion.csv",
+    2016: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/288b0a7d-2d40-4c59-a312-2cc562cfe4eb/download/2016-sociedades-por-fecha-rut-constitucion_v3.csv",
+    2017: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/667eef5c-0896-424b-baf1-d13356d40326/download/2017-sociedades-por-fecha-rut-constitucion.csv",
+    2018: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/ca45026b-4dde-44b0-8725-64446a95f69d/download/2018-sociedades-por-fecha-rut-constitucion-v2.csv",
+    2019: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/0d0d0ffb-fb28-4314-9bf0-8402353c9448/download/2019-sociedades-por-fecha-rut-constitucion-v3.csv",
+    2020: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/1ad6cd82-8859-4601-a993-043009279f45/download/2020-sociedades-por-fecha-rut-constitucion.csv",
+    2021: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/d5c69cb4-2fa8-4e92-906f-34776a30ce59/download/2021-sociedades-por-fecha-rut-constitucion.csv",
+    2022: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/3e286353-146d-47aa-ac42-e2f36e703d1f/download/2022-sociedades-por-fecha-rut-constitucion.csv",
+    2023: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/2fbe5f40-6c3d-42e6-8a84-e6ddce56d888/download/2023-sociedades-por-fecha-rut-constitucion.csv",
+    2024: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/42ee8c8c-59cf-42e4-89af-ec19a87dbf8d/download/2024-sociedades-por-fecha-rut-constitucion.csv",
+    2025: "https://datos.gob.cl/dataset/363edd60-4919-4ff1-b85f-f8e14d61285a/resource/71c8e355-226a-461e-809a-870c2275a178/download/2025-sociedades-por-fecha-rut-constitucion.csv",
 }
 
 SOURCE_NAME = "Registro de Empresas y Sociedades (SpA/SRL/EIRL)"
@@ -240,11 +252,26 @@ def to_records(df: pd.DataFrame) -> list[dict]:
     slim["quality_score"] = df["dv_mismatch"].map({True: 0.98, False: 1.00})
     slim["source_origin"] = SOURCE_ORIGIN
 
+    # region_tax_code / region_social_code llegan como float64 (por los NaN que
+    # to_numeric produce en filas sin región). Usamos Int64 nullable de pandas
+    # para que el upsert mande enteros reales ("7", no "7.0") o None — un
+    # smallint de Postgres rechaza "7.0" con error de sintaxis.
+    for region_col in ("region_tax_code", "region_social_code"):
+        slim[region_col] = slim[region_col].astype("Int64")
+
     for date_col in ("filed_at", "registered_at", "sii_approved_at"):
         slim[date_col] = slim[date_col].where(slim[date_col] != "NaT", None)
 
     slim = slim.where(pd.notnull(slim), None)
-    return slim.to_dict("records")
+
+    # pandas serializa Int64/NA a través de .where() como object; nos aseguramos
+    # de que cada valor quede como int nativo de Python o None, nunca float.
+    records = slim.to_dict("records")
+    for record in records:
+        for region_col in ("region_tax_code", "region_social_code"):
+            val = record[region_col]
+            record[region_col] = None if val is None or pd.isna(val) else int(val)
+    return records
 
 
 # ---------------------------------------------------------------------------
